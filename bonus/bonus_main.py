@@ -61,14 +61,36 @@ class QuizGame:
             print("\n[!] 등록된 퀴즈가 없습니다.")
             return
 
-        # [보너스 1] 랜덤 출제 로직
-        # 원본 리스트를 섞지 않고, 풀이용 복사본을 만들어 섞어줍니다.
+        # [보너스 1] 랜덤 출제
         play_list = self.quizzes[:]
         random.shuffle(play_list)
 
+        # [보너스 2] 문제 수 선택 로직 추가
+        total_available = len(play_list)
+        print(f"\n현재 총 {total_available}개의 문제가 준비되어 있습니다.")
+        
+        while True:
+            count_input = input(f"몇 문제를 풀고 싶으신가요? (1~{total_available}): ").strip()
+            if not count_input:
+                print("[!] 숫자를 입력해주세요.")
+                continue
+            try:
+                count = int(count_input)
+                if 1 <= count <= total_available:
+                    # 선택한 수만큼 리스트 슬라이싱
+                    play_list = play_list[:count]
+                    break
+                else:
+                    print(f"[!] 1에서 {total_available} 사이의 숫자를 입력해주세요.")
+            except ValueError:
+                print("[!] 숫자로만 입력해주세요.")
+            except (KeyboardInterrupt, EOFError):
+                print("\n[!] 문제 수 선택이 취소되었습니다.")
+                return
+
         correct_count = 0
         points_per_question = 10
-        print(f"\n--- 퀴즈 시작! (총 {len(play_list)}문제, 문제 순서는 랜덤입니다) ---")
+        print(f"\n--- 퀴즈 시작! (총 {len(play_list)}문제 출제) ---")
 
         try:
             for i, quiz in enumerate(play_list, 1):
@@ -92,6 +114,7 @@ class QuizGame:
 
             score = correct_count * points_per_question
             print(f"\n--- 결과 발표 ---")
+            print(f"총 {len(play_list)}문제 중 {correct_count}문제를 맞히셨습니다!")
             print(f"최종 획득 점수: {score}점")
             
             if score > self.best_score:
