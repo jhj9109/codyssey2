@@ -182,6 +182,39 @@ class QuizGame:
         except (KeyboardInterrupt, EOFError):
             print("\n\n[!] 추가가 중단되었습니다.")
 
+    def delete_quiz(self):
+        """등록된 퀴즈를 목록에서 선택하여 삭제합니다."""
+        print("\n--- 퀴즈 삭제 ---")
+        if not self.quizzes:
+            print("[!] 삭제할 퀴즈가 없습니다.")
+            return
+
+        # 현재 목록을 먼저 보여줌
+        self.show_list()
+        
+        try:
+            while True:
+                choice_input = input("삭제할 퀴즈의 번호를 입력하세요 (취소: 0): ").strip()
+                if choice_input == '0':
+                    print("삭제가 취소되었습니다.")
+                    return
+                
+                try:
+                    index = int(choice_input)
+                    if 1 <= index <= len(self.quizzes):
+                        # 삭제 확인 절차
+                        removed_quiz = self.quizzes.pop(index - 1)
+                        self.save_data() # 삭제 후 즉시 파일 저장
+                        print(f"\n=> [질문: {removed_quiz.question[:20]}...] 항목이 성공적으로 삭제되었습니다. 🗑️")
+                        break
+                    else:
+                        print(f"[!] 1에서 {len(self.quizzes)} 사이의 번호를 입력해주세요.")
+                except ValueError:
+                    print("[!] 숫자로만 입력해주세요.")
+        
+        except (KeyboardInterrupt, EOFError):
+            print("\n\n[!] 삭제 과정이 중단되었습니다.")
+
     def show_list(self):
         """퀴즈 목록 출력"""
         print("\n--- 등록된 퀴즈 목록 ---")
@@ -206,38 +239,34 @@ class QuizGame:
     # --- 메인 메뉴 실행 흐름 ---
     
     def run(self):
-        """프로그램의 메인 루프를 실행합니다."""
+        """메뉴에 삭제 옵션(6번) 추가"""
         while True:
             print("\n" + "="*30)
-            print("💡 나만의 퀴즈 게임 💡")
+            print("💡 나만의 퀴즈 게임 (Bonus) 💡")
             print("="*30)
             print("1. 퀴즈 풀기")
             print("2. 퀴즈 추가")
             print("3. 퀴즈 목록")
             print("4. 최고 점수 확인")
-            print("5. 종료")
+            print("5. 퀴즈 삭제 (New!)") # 메뉴 추가
+            print("6. 종료")
             print("="*30)
             
             try:
                 choice = input("원하시는 메뉴의 번호를 입력하세요: ").strip()
                 
-                if choice == '1':
-                    self.play()
-                elif choice == '2':
-                    self.add_quiz()
-                elif choice == '3':
-                    self.show_list()
-                elif choice == '4':
-                    self.show_score()
-                elif choice == '5':
-                    print("\n게임을 종료합니다. 이용해 주셔서 감사합니다! 👋")
-                    self.save_data() # 종료 전 안전하게 한 번 더 저장
+                if choice == '1': self.play()
+                elif choice == '2': self.add_quiz()
+                elif choice == '3': self.show_list()
+                elif choice == '4': self.show_score()
+                elif choice == '5': self.delete_quiz() # 삭제 메서드 연결
+                elif choice == '6':
+                    print("\n게임을 종료합니다. 👋")
+                    self.save_data()
                     break
                 else:
-                    print("[!] 1번부터 5번 사이의 숫자를 입력해주세요.")
-            
+                    print("[!] 올바른 메뉴 번호를 입력해주세요.")
             except (KeyboardInterrupt, EOFError):
-                print("\n\n[!] 비정상 종료가 감지되었습니다. 데이터를 저장하고 안전하게 종료합니다.")
                 self.save_data()
                 break
 
