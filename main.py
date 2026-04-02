@@ -172,7 +172,8 @@ class QuizGame:
             return
         for i, quiz in enumerate(self.quizzes, 1):
             q_summary = quiz.question[:30] + "..." if len(quiz.question) > 30 else quiz.question
-            print(f"{i}. {q_summary} (정답: {quiz.answer}번)")
+           # [Hotfix] 정답 노출 제거
+            print(f"{i}. {q_summary}")
         print("------------------------")
 
     def show_score(self):

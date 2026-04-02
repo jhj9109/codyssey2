@@ -1,0 +1,55 @@
+{
+    "quizzes": [
+        {
+            "question": "(여자)아이들의 데뷔곡은 무엇인가요?",
+            "choices": [
+                "LATATA",
+                "한(HANN)",
+                "Senorita",
+                "덤디덤디"
+            ],
+            "answer": 1
+        },
+        {
+            "question": "(여자)아이들의 리더는 누구인가요?",
+            "choices": [
+                "미연",
+                "민니",
+                "소연",
+                "우기"
+            ],
+            "answer": 3
+        },
+        {
+            "question": "다음 중 멤버 미연의 생일은 언제인가요?",
+            "choices": [
+                "1월 21일",
+                "1월 31일",
+                "2월 14일",
+                "3월 9일"
+            ],
+            "answer": 2
+        },
+        {
+            "question": "앨범 '2'의 타이틀 곡은 무엇인가요?",
+            "choices": [
+                "Queencard",
+                "TOMBOY",
+                "Nxde",
+                "Super Lady"
+            ],
+            "answer": 4
+        },
+        {
+            "question": "(여자)아이들의 공식 팬클럽 명칭은?",
+            "choices": [
+                "네버랜드",
+                "원스",
+                "마이",
+                "다이브"
+            ],
+            "answer": 1
+        }
+    ],
+    "best_score": 0
+}
