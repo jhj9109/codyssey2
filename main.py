@@ -138,5 +138,32 @@ def add_quiz(quiz_list):
         print("\n\n[!] 퀴즈 추가가 중단되었습니다. 메뉴로 돌아갑니다.")
         return quiz_list
 
+def show_quizzes(quiz_list):
+    """
+    현재 등록된 모든 퀴즈의 목록을 출력하는 함수
+    """
+    print("\n--- 등록된 퀴즈 목록 ---")
+    
+    if not quiz_list:
+        print("[!] 현재 등록된 퀴즈가 없습니다. 새로운 퀴즈를 추가해보세요!")
+        return
+
+    print(f"총 {len(quiz_list)}개의 퀴즈가 있습니다.\n")
+    
+    for i, quiz in enumerate(quiz_list, 1):
+        print(f"{i}. 질문: {question_summary(quiz.question)}")
+        # 선택지도 간략하게 보여주고 싶다면 아래 주석을 해제하세요.
+        # for j, choice in enumerate(quiz.choices, 1):
+        #     print(f"   ({j}) {choice}")
+        print(f"   (정답: {quiz.answer}번)")
+    
+    print("\n------------------------")
+
+def question_summary(question, length=30):
+    """질문이 너무 길 경우 말줄임표 처리 (가독성용)"""
+    if len(question) > length:
+        return question[:length] + "..."
+    return question
+
 # 실행 예시 (테스트용)
 current_score = solve_quiz(initial_quizzes)
