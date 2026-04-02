@@ -85,5 +85,58 @@ def solve_quiz(quiz_list):
         print(f"중단 전까지 맞힌 문제: {correct_count}개 / 획득 점수: {score}점")
         return score
 
+def add_quiz(quiz_list):
+    """
+    사용자로부터 입력을 받아 새로운 퀴즈를 목록에 추가하는 함수
+    """
+    print("\n--- 새로운 퀴즈 추가 ---")
+    
+    try:
+        # 1. 문제 입력
+        while True:
+            question = input("질문을 입력하세요: ").strip()
+            if not question:
+                print("[!] 질문은 비어있을 수 없습니다.")
+                continue
+            break
+
+        # 2. 선택지 입력 (4개)
+        choices = []
+        for i in range(1, 5):
+            while True:
+                choice = input(f"선택지 {i}를 입력하세요: ").strip()
+                if not choice:
+                    print(f"[!] 선택지 {i}은(는) 비어있을 수 없습니다.")
+                    continue
+                choices.append(choice)
+                break
+
+        # 3. 정답 번호 입력
+        while True:
+            answer_input = input("정답 번호를 입력하세요 (1~4): ").strip()
+            if not answer_input:
+                print("[!] 정답 번호를 입력해야 합니다.")
+                continue
+            
+            try:
+                answer = int(answer_input)
+                if not (1 <= answer <= 4):
+                    print("[!] 1에서 4 사이의 숫자만 입력 가능합니다.")
+                    continue
+            except ValueError:
+                print("[!] 숫자로만 입력해주세요 (예: 1).")
+                continue
+            break
+
+        # 4. Quiz 객체 생성 및 추가
+        new_quiz = Quiz(question, choices, answer)
+        quiz_list.append(new_quiz)
+        print("\n=> 퀴즈가 성공적으로 추가되었습니다! ✅")
+        return quiz_list
+
+    except (KeyboardInterrupt, EOFError):
+        print("\n\n[!] 퀴즈 추가가 중단되었습니다. 메뉴로 돌아갑니다.")
+        return quiz_list
+
 # 실행 예시 (테스트용)
 current_score = solve_quiz(initial_quizzes)
