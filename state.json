@@ -49,7 +49,17 @@
                 "다이브"
             ],
             "answer": 1
+        },
+        {
+            "question": "추가 질문 입니다.",
+            "choices": [
+                "1번",
+                "2번",
+                "3번",
+                "4번"
+            ],
+            "answer": 2
         }
     ],
-    "best_score": 0
+    "best_score": 60
 }
