@@ -4,28 +4,30 @@ import os
 import random  # 보너스 1: random 모듈 추가
 
 class Quiz:
-    def __init__(self, question, choices, answer):
+    def __init__(self, question, choices, answer, hint=""):
         self.question = question
         self.choices = choices
         self.answer = answer
+        self.hint = hint  # [보너스 3] 힌트 속성 추가
 
     def display(self, index):
         print(f"\n[문제 {index}] {self.question}")
         for i, choice in enumerate(self.choices, 1):
             print(f"  {i}. {choice}")
+        if self.hint:
+            print("  (힌트를 보려면 'h' 또는 'hint'를 입력하세요.)")
 
     def is_correct(self, user_input):
         return str(self.answer) == str(user_input).strip()
 
-# 기본 퀴즈 데이터 ((여자)아이들 테마 유지)
+# 기본 데이터에 힌트 추가
 initial_quizzes = [
-    Quiz("(여자)아이들의 데뷔곡은 무엇인가요?", ["LATATA", "한(HANN)", "Senorita", "덤디덤디"], 1),
-    Quiz("(여자)아이들의 리더는 누구인가요?", ["미연", "민니", "소연", "우기"], 3),
-    Quiz("다음 중 멤버 미연의 생일은 언제인가요?", ["1월 21일", "1월 31일", "2월 14일", "3월 9일"], 2),
-    Quiz("앨범 '2'의 타이틀 곡은 무엇인가요?", ["Queencard", "TOMBOY", "Nxde", "Super Lady"], 4),
-    Quiz("(여자)아이들의 공식 팬클럽 명칭은?", ["네버랜드", "원스", "마이", "다이브"], 1)
+    Quiz("(여자)아이들의 데뷔곡은 무엇인가요?", ["LATATA", "한(HANN)", "Senorita", "덤디덤디"], 1, "L로 시작하는 강렬한 곡입니다."),
+    Quiz("(여자)아이들의 리더는 누구인가요?", ["미연", "민니", "소연", "우기"], 3, "천재 프로듀서로 불리는 멤버입니다."),
+    Quiz("다음 중 멤버 미연의 생일은 언제인가요?", ["1월 21일", "1월 31일", "2월 14일", "3월 9일"], 2, "1월의 마지막 날입니다."),
+    Quiz("앨범 '2'의 타이틀 곡은 무엇인가요?", ["Queencard", "TOMBOY", "Nxde", "Super Lady"], 4, "웅장한 에너지가 느껴지는 곡 제목입니다."),
+    Quiz("(여자)아이들의 공식 팬클럽 명칭은?", ["네버랜드", "원스", "마이", "다이브"], 1, "피터팬이 사는 그곳의 이름입니다.")
 ]
-
 class QuizGame:
     def __init__(self):
         # 보너스 폴더 내에서 독립적으로 실행되도록 동일 경로의 state.json 사용
@@ -43,12 +45,17 @@ class QuizGame:
                 data = json.load(f)
                 self.best_score = data.get("best_score", 0)
                 for q_data in data.get("quizzes", []):
-                    self.quizzes.append(Quiz(q_data["question"], q_data["choices"], q_data["answer"]))
+                    self.quizzes.append(Quiz(q_data["question"], q_data["choices"], q_data["answer"], q_data.get("hint", "")))
         except Exception:
             self.quizzes = initial_quizzes[:]
 
     def save_data(self):
-        quiz_data = [{"question": q.question, "choices": q.choices, "answer": q.answer} for q in self.quizzes]
+        quiz_data = [{
+            "question": q.question, 
+            "choices": q.choices, 
+            "answer": q.answer,
+            "hint": q.hint # 힌트 저장 추가
+        } for q in self.quizzes]
         state = {"quizzes": quiz_data, "best_score": self.best_score}
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
@@ -88,33 +95,49 @@ class QuizGame:
                 print("\n[!] 문제 수 선택이 취소되었습니다.")
                 return
 
+        score = 0
         correct_count = 0
-        points_per_question = 10
-        print(f"\n--- 퀴즈 시작! (총 {len(play_list)}문제 출제) ---")
+        base_points = 10     # 기본 점수
+        hint_penalty = 3    # 힌트 사용 시 차감 점수
+        
+        print(f"\n--- 퀴즈 시작! (기본 {base_points}점 / 힌트 사용 시 {base_points - hint_penalty}점) ---")
 
         try:
             for i, quiz in enumerate(play_list, 1):
+                used_hint = False
                 while True:
                     quiz.display(i)
-                    user_input = input("정답 번호를 입력하세요 (1~4): ").strip()
+                    user_input = input("정답 번호를 입력하세요 (1~4): ").strip().lower()
                     
                     if not user_input: continue
+                    
+                    # 힌트 요청 처리
+                    if user_input in ['h', 'hint']:
+                        if quiz.hint:
+                            print(f"\n💡 힌트: {quiz.hint}")
+                            used_hint = True
+                        else:
+                            print("\n[!] 이 문제에는 힌트가 없습니다.")
+                        continue
+
                     try:
                         choice = int(user_input)
                         if not (1 <= choice <= 4): continue
                     except ValueError:
+                        print("[!] 숫자(1~4) 또는 힌트(h)를 입력해주세요.")
                         continue
 
                     if quiz.is_correct(choice):
                         print("=> 정답입니다! ✨")
                         correct_count += 1
+                        # 힌트 사용 여부에 따라 점수 합산
+                        score += (base_points - hint_penalty) if used_hint else base_points
                     else:
                         print(f"=> 오답입니다. (정답: {quiz.answer}) 😢")
                     break
 
-            score = correct_count * points_per_question
             print(f"\n--- 결과 발표 ---")
-            print(f"총 {len(play_list)}문제 중 {correct_count}문제를 맞히셨습니다!")
+            print(f"맞힌 개수: {correct_count} / {len(play_list)}")
             print(f"최종 획득 점수: {score}점")
             
             if score > self.best_score:
