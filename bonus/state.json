@@ -1,0 +1,68 @@
+{
+    "quizzes": [
+        {
+            "question": "(여자)아이들의 데뷔곡은 무엇인가요?",
+            "choices": [
+                "LATATA",
+                "한(HANN)",
+                "Senorita",
+                "덤디덤디"
+            ],
+            "answer": 1,
+            "hint": "L로 시작하는 강렬한 곡입니다."
+        },
+        {
+            "question": "(여자)아이들의 리더는 누구인가요?",
+            "choices": [
+                "미연",
+                "민니",
+                "소연",
+                "우기"
+            ],
+            "answer": 3,
+            "hint": "천재 프로듀서로 불리는 멤버입니다."
+        },
+        {
+            "question": "다음 중 멤버 미연의 생일은 언제인가요?",
+            "choices": [
+                "1월 21일",
+                "1월 31일",
+                "2월 14일",
+                "3월 9일"
+            ],
+            "answer": 2,
+            "hint": "1월의 마지막 날입니다."
+        },
+        {
+            "question": "앨범 '2'의 타이틀 곡은 무엇인가요?",
+            "choices": [
+                "Queencard",
+                "TOMBOY",
+                "Nxde",
+                "Super Lady"
+            ],
+            "answer": 4,
+            "hint": "웅장한 에너지가 느껴지는 곡 제목입니다."
+        },
+        {
+            "question": "(여자)아이들의 공식 팬클럽 명칭은?",
+            "choices": [
+                "네버랜드",
+                "원스",
+                "마이",
+                "다이브"
+            ],
+            "answer": 1,
+            "hint": "피터팬이 사는 그곳의 이름입니다."
+        }
+    ],
+    "best_score": 20,
+    "history": [
+        {
+            "date": "2026-04-02 23:00:00",
+            "total_questions": 3,
+            "correct_count": 2,
+            "score": 20
+        }
+    ]
+}
