@@ -31,14 +31,16 @@ initial_quizzes = [
 
 def solve_quiz(quiz_list):
     """
-    저장된 퀴즈를 출제하고 맞춘 개수를 반환하는 함수
+    저장된 퀴즈를 출제하고, 정답 수 기반으로 계산된 최종 점수를 반환하는 함수
     """
     if not quiz_list:
         print("\n[!] 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해주세요.")
         return 0
 
-    score = 0
-    print(f"\n--- 퀴즈를 시작합니다! (총 {len(quiz_list)}문제) ---")
+    correct_count = 0
+    points_per_question = 10  # 문제당 점수
+    
+    print(f"\n--- 퀴즈를 시작합니다! (총 {len(quiz_list)}문제, 문제당 {points_per_question}점) ---")
 
     try:
         for i, quiz in enumerate(quiz_list, 1):
@@ -64,17 +66,23 @@ def solve_quiz(quiz_list):
                 # 정답 확인
                 if quiz.is_correct(choice):
                     print("=> 정답입니다! ✨")
-                    score += 1
+                    correct_count += 1
                 else:
                     print(f"=> 오답입니다. (정답: {quiz.answer}) 😢")
                 break
 
+        # 최종 점수 계산 및 출력
+        score = correct_count * points_per_question
         print(f"\n--- 결과 발표 ---")
-        print(f"총 {len(quiz_list)}문제 중 {score}문제를 맞히셨습니다!")
+        print(f"총 {len(quiz_list)}문제 중 {correct_count}문제를 맞히셨습니다!")
+        print(f"최종 획득 점수: {score}점")
         return score
 
     except (KeyboardInterrupt, EOFError):
-        print("\n\n[!] 학습 중 중단되었습니다. 메뉴로 돌아갑니다.")
+        # 비정상 종료 시에도 현재까지의 점수 계산 후 안전하게 반환
+        score = correct_count * points_per_question
+        print("\n\n[!] 퀴즈 진행이 중단되었습니다. 메뉴로 돌아갑니다.")
+        print(f"중단 전까지 맞힌 문제: {correct_count}개 / 획득 점수: {score}점")
         return score
 
 # 실행 예시 (테스트용)
