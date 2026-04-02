@@ -1,3 +1,6 @@
+import json
+import os
+
 class Quiz:
     def __init__(self, question, choices, answer):
         """
@@ -87,12 +90,12 @@ def solve_quiz(quiz_list):
 
 def add_quiz(quiz_list):
     """
-    사용자로부터 입력을 받아 새로운 퀴즈를 목록에 추가하는 함수
+    사용자로부터 입력을 받아 새로운 퀴즈를 목록에 추가하고 파일에 저장하는 함수
     """
     print("\n--- 새로운 퀴즈 추가 ---")
     
     try:
-        # 1. 문제 입력
+        # 1. 문제 입력 (이전 코드 동일)
         while True:
             question = input("질문을 입력하세요: ").strip()
             if not question:
@@ -128,15 +131,21 @@ def add_quiz(quiz_list):
                 continue
             break
 
-        # 4. Quiz 객체 생성 및 추가
+        # 4. Quiz 객체 생성 및 목록 추가
         new_quiz = Quiz(question, choices, answer)
         quiz_list.append(new_quiz)
-        print("\n=> 퀴즈가 성공적으로 추가되었습니다! ✅")
+        
+        # 5. [Hotfix] 파일에 즉시 저장
+        # 현재는 best_score 로직 전이므로 기본값 0 전달
+        save_to_file(quiz_list)
+        
+        print("\n=> 퀴즈가 성공적으로 추가되었으며 state.json에 저장되었습니다! ✅")
         return quiz_list
 
     except (KeyboardInterrupt, EOFError):
         print("\n\n[!] 퀴즈 추가가 중단되었습니다. 메뉴로 돌아갑니다.")
         return quiz_list
+
 
 def show_quizzes(quiz_list):
     """
@@ -164,6 +173,34 @@ def question_summary(question, length=30):
     if len(question) > length:
         return question[:length] + "..."
     return question
+
+
+def save_to_file(quiz_list, best_score=0):
+    """
+    퀴즈 목록과 최고 점수를 state.json 파일에 저장하는 함수
+    """
+    file_path = "state.json"
+    
+    # Quiz 객체들을 저장 가능한 딕셔너리 리스트로 변환
+    quiz_data = []
+    for q in quiz_list:
+        quiz_data.append({
+            "question": q.question,
+            "choices": q.choices,
+            "answer": q.answer
+        })
+    
+    # 전체 데이터 구조 생성
+    state = {
+        "quizzes": quiz_data,
+        "best_score": best_score
+    }
+    
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"[!] 파일 저장 중 오류가 발생했습니다: {e}")
 
 # 실행 예시 (테스트용)
 current_score = solve_quiz(initial_quizzes)
