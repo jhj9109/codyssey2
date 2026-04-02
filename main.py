@@ -32,202 +32,199 @@ initial_quizzes = [
     Quiz("(여자)아이들의 공식 팬클럽 명칭은?", ["네버랜드", "원스", "마이", "다이브"], 1)
 ]
 
-def solve_quiz(quiz_list):
-    """
-    저장된 퀴즈를 출제하고, 정답 수 기반으로 계산된 최종 점수를 반환하는 함수
-    """
-    if not quiz_list:
-        print("\n[!] 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해주세요.")
-        return 0
 
-    correct_count = 0
-    points_per_question = 10  # 문제당 점수
+class QuizGame:
+    def __init__(self):
+        """게임 초기화: 데이터 파일을 불러오거나 기본값을 설정합니다."""
+        self.file_path = "state.json"
+        self.quizzes = []
+        self.best_score = 0
+        self.load_data()
+
+    def load_data(self):
+        """state.json 파일에서 데이터를 불러옵니다. 파일이 없거나 손상되었으면 기본값을 사용합니다."""
+        if not os.path.exists(self.file_path):
+            print("[안내] 저장된 데이터 파일이 없어 기본 퀴즈 데이터를 불러옵니다.")
+            self.quizzes = initial_quizzes[:] # 앞서 만든 기본 데이터 복사
+            return
+
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                
+                self.best_score = data.get("best_score", 0)
+                
+                # JSON 데이터의 딕셔너리를 다시 Quiz 객체로 변환
+                for q_data in data.get("quizzes", []):
+                    quiz = Quiz(q_data["question"], q_data["choices"], q_data["answer"])
+                    self.quizzes.append(quiz)
+                    
+            print("[안내] 저장된 퀴즈 데이터를 성공적으로 불러왔습니다.")
+            
+        except json.JSONDecodeError:
+            print("[오류] 데이터 파일이 손상되었습니다. 기본 퀴즈 데이터로 시작합니다.")
+            self.quizzes = initial_quizzes[:]
+        except Exception as e:
+            print(f"[오류] 파일을 불러오는 중 문제가 발생했습니다: {e}")
+            self.quizzes = initial_quizzes[:]
+
+    def save_data(self):
+        """현재 퀴즈 목록과 최고 점수를 파일에 저장합니다."""
+        quiz_data = [{"question": q.question, "choices": q.choices, "answer": q.answer} for q in self.quizzes]
+        state = {"quizzes": quiz_data, "best_score": self.best_score}
+        
+        try:
+            with open(self.file_path, "w", encoding="utf-8") as f:
+                json.dump(state, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"[!] 파일 저장 중 오류가 발생했습니다: {e}")
+
+    # --- 기존 함수들을 메서드로 이식 ---
     
-    print(f"\n--- 퀴즈를 시작합니다! (총 {len(quiz_list)}문제, 문제당 {points_per_question}점) ---")
+    def play(self):
+        """퀴즈 풀기 및 점수 갱신"""
+        # 이전에 만든 solve_quiz 로직 활용
+        if not self.quizzes:
+            print("\n[!] 등록된 퀴즈가 없습니다.")
+            return
 
-    try:
-        for i, quiz in enumerate(quiz_list, 1):
-            while True:
-                quiz.display(i)
-                user_input = input("정답 번호를 입력하세요 (1~4): ").strip()
+        correct_count = 0
+        points_per_question = 10
+        print(f"\n--- 퀴즈 시작! (총 {len(self.quizzes)}문제, 문제당 {points_per_question}점) ---")
 
-                # 1. 빈 입력 처리
-                if not user_input:
-                    print("[!] 입력이 비어 있습니다. 다시 입력해주세요.")
-                    continue
-
-                # 2. 숫자 변환 및 범위 확인
-                try:
-                    choice = int(user_input)
-                    if not (1 <= choice <= 4):
-                        print("[!] 1에서 4 사이의 숫자만 입력 가능합니다.")
+        try:
+            for i, quiz in enumerate(self.quizzes, 1):
+                while True:
+                    quiz.display(i)
+                    user_input = input("정답 번호를 입력하세요 (1~4): ").strip()
+                    
+                    if not user_input:
+                        print("[!] 입력이 비어 있습니다. 다시 입력해주세요.")
                         continue
-                except ValueError:
-                    print("[!] 숫자로만 입력해주세요 (예: 1).")
-                    continue
+                    try:
+                        choice = int(user_input)
+                        if not (1 <= choice <= 4):
+                            print("[!] 1~4 사이의 숫자만 입력 가능합니다.")
+                            continue
+                    except ValueError:
+                        print("[!] 숫자로만 입력해주세요 (예: 1).")
+                        continue
 
-                # 정답 확인
-                if quiz.is_correct(choice):
-                    print("=> 정답입니다! ✨")
-                    correct_count += 1
-                else:
-                    print(f"=> 오답입니다. (정답: {quiz.answer}) 😢")
-                break
+                    if quiz.is_correct(choice):
+                        print("=> 정답입니다! ✨")
+                        correct_count += 1
+                    else:
+                        print(f"=> 오답입니다. (정답: {quiz.answer}) 😢")
+                    break
 
-        # 최종 점수 계산 및 출력
-        score = correct_count * points_per_question
-        print(f"\n--- 결과 발표 ---")
-        print(f"총 {len(quiz_list)}문제 중 {correct_count}문제를 맞히셨습니다!")
-        print(f"최종 획득 점수: {score}점")
-        return score
+            score = correct_count * points_per_question
+            print(f"\n--- 결과 발표 ---")
+            print(f"최종 획득 점수: {score}점")
+            
+            # 최고 점수 갱신 로직
+            if score > self.best_score:
+                print(f"🎉 최고 점수 경신! (기존: {self.best_score}점 -> 새로운 최고 점수: {score}점) 🎉")
+                self.best_score = score
+                self.save_data() # 갱신 시 자동 저장
 
-    except (KeyboardInterrupt, EOFError):
-        # 비정상 종료 시에도 현재까지의 점수 계산 후 안전하게 반환
-        score = correct_count * points_per_question
-        print("\n\n[!] 퀴즈 진행이 중단되었습니다. 메뉴로 돌아갑니다.")
-        print(f"중단 전까지 맞힌 문제: {correct_count}개 / 획득 점수: {score}점")
-        return score
+        except (KeyboardInterrupt, EOFError):
+            print("\n\n[!] 퀴즈가 중단되었습니다. 메인 메뉴로 돌아갑니다.")
 
-def add_quiz(quiz_list):
-    """
-    사용자로부터 입력을 받아 새로운 퀴즈를 목록에 추가하고 파일에 저장하는 함수
-    """
-    print("\n--- 새로운 퀴즈 추가 ---")
-    
-    try:
-        # 1. 문제 입력 (이전 코드 동일)
-        while True:
-            question = input("질문을 입력하세요: ").strip()
-            if not question:
-                print("[!] 질문은 비어있을 수 없습니다.")
-                continue
-            break
-
-        # 2. 선택지 입력 (4개)
-        choices = []
-        for i in range(1, 5):
+    def add_quiz(self):
+        """퀴즈 추가"""
+        print("\n--- 새로운 퀴즈 추가 ---")
+        try:
             while True:
-                choice = input(f"선택지 {i}를 입력하세요: ").strip()
-                if not choice:
-                    print(f"[!] 선택지 {i}은(는) 비어있을 수 없습니다.")
-                    continue
-                choices.append(choice)
-                break
+                question = input("질문을 입력하세요: ").strip()
+                if question: break
+                print("[!] 질문은 비어있을 수 없습니다.")
 
-        # 3. 정답 번호 입력
+            choices = []
+            for i in range(1, 5):
+                while True:
+                    choice = input(f"선택지 {i}를 입력하세요: ").strip()
+                    if choice:
+                        choices.append(choice)
+                        break
+                    print("[!] 비어있을 수 없습니다.")
+
+            while True:
+                answer_input = input("정답 번호를 입력하세요 (1~4): ").strip()
+                try:
+                    answer = int(answer_input)
+                    if 1 <= answer <= 4: break
+                    print("[!] 1~4 사이의 숫자만 입력 가능합니다.")
+                except ValueError:
+                    print("[!] 숫자로만 입력해주세요.")
+
+            self.quizzes.append(Quiz(question, choices, answer))
+            self.save_data() # 추가 시 자동 저장
+            print("\n=> 퀴즈가 성공적으로 추가되었습니다! ✅")
+
+        except (KeyboardInterrupt, EOFError):
+            print("\n\n[!] 추가가 중단되었습니다.")
+
+    def show_list(self):
+        """퀴즈 목록 출력"""
+        print("\n--- 등록된 퀴즈 목록 ---")
+        if not self.quizzes:
+            print("현재 등록된 퀴즈가 없습니다.")
+            return
+        for i, quiz in enumerate(self.quizzes, 1):
+            q_summary = quiz.question[:30] + "..." if len(quiz.question) > 30 else quiz.question
+            print(f"{i}. {q_summary} (정답: {quiz.answer}번)")
+        print("------------------------")
+
+    def show_score(self):
+        """최고 점수 출력"""
+        print("\n--- 🏆 최고 점수 확인 🏆 ---")
+        if self.best_score > 0:
+            print(f"현재 최고 점수는 {self.best_score}점 입니다!")
+        else:
+            print("아직 기록된 점수가 없습니다. 첫 퀴즈에 도전해 보세요!")
+        print("----------------------------")
+
+    # --- 메인 메뉴 실행 흐름 ---
+    
+    def run(self):
+        """프로그램의 메인 루프를 실행합니다."""
         while True:
-            answer_input = input("정답 번호를 입력하세요 (1~4): ").strip()
-            if not answer_input:
-                print("[!] 정답 번호를 입력해야 합니다.")
-                continue
+            print("\n" + "="*30)
+            print("💡 나만의 퀴즈 게임 💡")
+            print("="*30)
+            print("1. 퀴즈 풀기")
+            print("2. 퀴즈 추가")
+            print("3. 퀴즈 목록")
+            print("4. 최고 점수 확인")
+            print("5. 종료")
+            print("="*30)
             
             try:
-                answer = int(answer_input)
-                if not (1 <= answer <= 4):
-                    print("[!] 1에서 4 사이의 숫자만 입력 가능합니다.")
-                    continue
-            except ValueError:
-                print("[!] 숫자로만 입력해주세요 (예: 1).")
-                continue
-            break
+                choice = input("원하시는 메뉴의 번호를 입력하세요: ").strip()
+                
+                if choice == '1':
+                    self.play()
+                elif choice == '2':
+                    self.add_quiz()
+                elif choice == '3':
+                    self.show_list()
+                elif choice == '4':
+                    self.show_score()
+                elif choice == '5':
+                    print("\n게임을 종료합니다. 이용해 주셔서 감사합니다! 👋")
+                    self.save_data() # 종료 전 안전하게 한 번 더 저장
+                    break
+                else:
+                    print("[!] 1번부터 5번 사이의 숫자를 입력해주세요.")
+            
+            except (KeyboardInterrupt, EOFError):
+                print("\n\n[!] 비정상 종료가 감지되었습니다. 데이터를 저장하고 안전하게 종료합니다.")
+                self.save_data()
+                break
 
-        # 4. Quiz 객체 생성 및 목록 추가
-        new_quiz = Quiz(question, choices, answer)
-        quiz_list.append(new_quiz)
-        
-        # 5. [Hotfix] 파일에 즉시 저장
-        # 현재는 best_score 로직 전이므로 기본값 0 전달
-        save_to_file(quiz_list)
-        
-        print("\n=> 퀴즈가 성공적으로 추가되었으며 state.json에 저장되었습니다! ✅")
-        return quiz_list
-
-    except (KeyboardInterrupt, EOFError):
-        print("\n\n[!] 퀴즈 추가가 중단되었습니다. 메뉴로 돌아갑니다.")
-        return quiz_list
-
-
-def show_quizzes(quiz_list):
-    """
-    현재 등록된 모든 퀴즈의 목록을 출력하는 함수
-    """
-    print("\n--- 등록된 퀴즈 목록 ---")
-    
-    if not quiz_list:
-        print("[!] 현재 등록된 퀴즈가 없습니다. 새로운 퀴즈를 추가해보세요!")
-        return
-
-    print(f"총 {len(quiz_list)}개의 퀴즈가 있습니다.\n")
-    
-    for i, quiz in enumerate(quiz_list, 1):
-        print(f"{i}. 질문: {question_summary(quiz.question)}")
-        # 선택지도 간략하게 보여주고 싶다면 아래 주석을 해제하세요.
-        # for j, choice in enumerate(quiz.choices, 1):
-        #     print(f"   ({j}) {choice}")
-        print(f"   (정답: {quiz.answer}번)")
-    
-    print("\n------------------------")
-
-def question_summary(question, length=30):
-    """질문이 너무 길 경우 말줄임표 처리 (가독성용)"""
-    if len(question) > length:
-        return question[:length] + "..."
-    return question
-
-
-def save_to_file(quiz_list, best_score=0):
-    """
-    퀴즈 목록과 최고 점수를 state.json 파일에 저장하는 함수
-    """
-    file_path = "state.json"
-    
-    # Quiz 객체들을 저장 가능한 딕셔너리 리스트로 변환
-    quiz_data = []
-    for q in quiz_list:
-        quiz_data.append({
-            "question": q.question,
-            "choices": q.choices,
-            "answer": q.answer
-        })
-    
-    # 전체 데이터 구조 생성
-    state = {
-        "quizzes": quiz_data,
-        "best_score": best_score
-    }
-    
-    try:
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(state, f, ensure_ascii=False, indent=4)
-    except Exception as e:
-        print(f"[!] 파일 저장 중 오류가 발생했습니다: {e}")
-
-def show_best_score(best_score):
-    """
-    현재까지의 최고 점수를 출력하는 함수
-    """
-    print("\n--- 🏆 최고 점수 확인 🏆 ---")
-    if best_score > 0:
-        print(f"현재 최고 점수는 {best_score}점 입니다!")
-        print("계속해서 기록을 경신해 보세요!")
-    else:
-        print("아직 기록된 점수가 없습니다. 첫 퀴즈에 도전해 보세요!")
-    print("----------------------------")
-
-def check_and_update_best_score(current_score, best_score, quiz_list):
-    """
-    방금 획득한 점수가 최고 점수인지 확인하고, 
-    최고 점수라면 갱신 후 파일에 저장하는 함수
-    """
-    if current_score > best_score:
-        print(f"\n🎉 축하합니다! 최고 점수를 경신했습니다! (기존: {best_score}점 -> 새로운 최고 점수: {current_score}점) 🎉")
-        new_best_score = current_score
-        
-        # 앞서 만든 save_to_file 함수를 재사용하여 파일 업데이트
-        save_to_file(quiz_list, new_best_score)
-        return new_best_score
-    
-    return best_score
-
+# 프로그램 실행 진입점
+if __name__ == "__main__":
+    game = QuizGame()
+    game.run()
 # 실행 예시 (테스트용)
 current_score = solve_quiz(initial_quizzes)
