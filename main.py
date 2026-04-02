@@ -119,7 +119,7 @@ class QuizGame:
 
             score = correct_count * points_per_question
             print(f"\n--- 결과 발표 ---")
-            print(f"▶ 맞힌 문항 수: {correct_count} / {len(play_list)} 문제")
+            print(f"▶ 맞힌 문항 수: {correct_count} / {len(self.quizzes)} 문제")
             print(f"▶ 최종 획득 점수: {score}점")
             
             # 최고 점수 갱신 로직
