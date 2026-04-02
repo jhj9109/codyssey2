@@ -2,6 +2,7 @@
 import json
 import os
 import random  # 보너스 1: random 모듈 추가
+from datetime import datetime  # [보너스 5] 날짜 기록을 위한 모듈
 
 class Quiz:
     def __init__(self, question, choices, answer, hint=""):
@@ -30,10 +31,10 @@ initial_quizzes = [
 ]
 class QuizGame:
     def __init__(self):
-        # 보너스 폴더 내에서 독립적으로 실행되도록 동일 경로의 state.json 사용
         self.file_path = "state.json"
         self.quizzes = []
         self.best_score = 0
+        self.history = []  # [보너스 5] 히스토리 리스트 초기화
         self.load_data()
 
     def load_data(self):
@@ -44,23 +45,23 @@ class QuizGame:
             with open(self.file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 self.best_score = data.get("best_score", 0)
+                self.history = data.get("history", []) # 히스토리 불러오기
                 for q_data in data.get("quizzes", []):
                     self.quizzes.append(Quiz(q_data["question"], q_data["choices"], q_data["answer"], q_data.get("hint", "")))
         except Exception:
             self.quizzes = initial_quizzes[:]
 
     def save_data(self):
-        quiz_data = [{
-            "question": q.question, 
-            "choices": q.choices, 
-            "answer": q.answer,
-            "hint": q.hint # 힌트 저장 추가
-        } for q in self.quizzes]
-        state = {"quizzes": quiz_data, "best_score": self.best_score}
+        quiz_data = [{"question": q.question, "choices": q.choices, "answer": q.answer, "hint": q.hint} for q in self.quizzes]
+        state = {
+            "quizzes": quiz_data,
+            "best_score": self.best_score,
+            "history": self.history  # [보너스 5] 히스토리 저장
+        }
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
                 json.dump(state, f, ensure_ascii=False, indent=4)
-        except Exception as e:
+        except Exception:
             pass
 
     def play(self):
@@ -144,9 +145,30 @@ class QuizGame:
                 print(f"🎉 최고 점수 경신! (새로운 최고 점수: {score}점) 🎉")
                 self.best_score = score
                 self.save_data()
+            
+            # (퀴즈 풀기 루프 종료 후)
+            
+            # [보너스 5] 게임 기록 생성 및 추가
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            record = {
+                "date": now,
+                "total_questions": len(play_list),
+                "correct_count": correct_count,
+                "score": score
+            }
+            self.history.append(record)
+            
+            # 최고 점수 체크 및 전체 데이터 저장
+            if score > self.best_score:
+                self.best_score = score
+            self.save_data()
+            
+            print(f"\n=> 게임 기록이 저장되었습니다. ({now})")
+            
+
 
         except (KeyboardInterrupt, EOFError):
-            print("\n\n[!] 퀴즈가 중단되었습니다.")
+            print("\n[!] 중단되어 기록이 저장되지 않았습니다.")
 
     def add_quiz(self):
         """퀴즈 추가"""
@@ -236,39 +258,43 @@ class QuizGame:
             print("아직 기록된 점수가 없습니다. 첫 퀴즈에 도전해 보세요!")
         print("----------------------------")
 
+    def show_history(self):
+        """저장된 모든 게임 기록을 출력합니다."""
+        print("\n--- 📜 전체 게임 기록 히스토리 📜 ---")
+        if not self.history:
+            print("아직 저장된 기록이 없습니다.")
+            return
+
+        print(f"{'일시':<20} | {'문항수':<5} | {'정답수':<5} | {'점수':<5}")
+        print("-" * 50)
+        for entry in self.history:
+            print(f"{entry['date']:<20} | {entry['total_questions']:<8} | {entry['correct_count']:<8} | {entry['score']}점")
+        print("-" * 50)
     # --- 메인 메뉴 실행 흐름 ---
     
     def run(self):
-        """메뉴에 삭제 옵션(6번) 추가"""
+        """메뉴에 히스토리 확인(6번) 추가"""
         while True:
             print("\n" + "="*30)
-            print("💡 나만의 퀴즈 게임 (Bonus) 💡")
+            print("💡 퀴즈 게임 (Ultimate Bonus) 💡")
             print("="*30)
             print("1. 퀴즈 풀기")
             print("2. 퀴즈 추가")
             print("3. 퀴즈 목록")
             print("4. 최고 점수 확인")
-            print("5. 퀴즈 삭제 (New!)") # 메뉴 추가
-            print("6. 종료")
+            print("5. 퀴즈 삭제")
+            print("6. 전체 기록 보기 (New!)") # 메뉴 추가
+            print("7. 종료")
             print("="*30)
             
-            try:
-                choice = input("원하시는 메뉴의 번호를 입력하세요: ").strip()
-                
-                if choice == '1': self.play()
-                elif choice == '2': self.add_quiz()
-                elif choice == '3': self.show_list()
-                elif choice == '4': self.show_score()
-                elif choice == '5': self.delete_quiz() # 삭제 메서드 연결
-                elif choice == '6':
-                    print("\n게임을 종료합니다. 👋")
-                    self.save_data()
-                    break
-                else:
-                    print("[!] 올바른 메뉴 번호를 입력해주세요.")
-            except (KeyboardInterrupt, EOFError):
-                self.save_data()
-                break
+            choice = input("입력: ").strip()
+            if choice == '1': self.play()
+            elif choice == '2': self.add_quiz()
+            elif choice == '3': self.show_list()
+            elif choice == '4': self.show_score()
+            elif choice == '5': self.delete_quiz()
+            elif choice == '6': self.show_history() # 히스토리 메서드 연결
+            elif choice == '7': break
 
 # 프로그램 실행 진입점
 if __name__ == "__main__":
