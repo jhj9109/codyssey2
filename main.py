@@ -28,3 +28,54 @@ initial_quizzes = [
     Quiz("앨범 '2'의 타이틀 곡은 무엇인가요?", ["Queencard", "TOMBOY", "Nxde", "Super Lady"], 4),
     Quiz("(여자)아이들의 공식 팬클럽 명칭은?", ["네버랜드", "원스", "마이", "다이브"], 1)
 ]
+
+def solve_quiz(quiz_list):
+    """
+    저장된 퀴즈를 출제하고 맞춘 개수를 반환하는 함수
+    """
+    if not quiz_list:
+        print("\n[!] 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해주세요.")
+        return 0
+
+    score = 0
+    print(f"\n--- 퀴즈를 시작합니다! (총 {len(quiz_list)}문제) ---")
+
+    try:
+        for i, quiz in enumerate(quiz_list, 1):
+            while True:
+                quiz.display(i)
+                user_input = input("정답 번호를 입력하세요 (1~4): ").strip()
+
+                # 1. 빈 입력 처리
+                if not user_input:
+                    print("[!] 입력이 비어 있습니다. 다시 입력해주세요.")
+                    continue
+
+                # 2. 숫자 변환 및 범위 확인
+                try:
+                    choice = int(user_input)
+                    if not (1 <= choice <= 4):
+                        print("[!] 1에서 4 사이의 숫자만 입력 가능합니다.")
+                        continue
+                except ValueError:
+                    print("[!] 숫자로만 입력해주세요 (예: 1).")
+                    continue
+
+                # 정답 확인
+                if quiz.is_correct(choice):
+                    print("=> 정답입니다! ✨")
+                    score += 1
+                else:
+                    print(f"=> 오답입니다. (정답: {quiz.answer}) 😢")
+                break
+
+        print(f"\n--- 결과 발표 ---")
+        print(f"총 {len(quiz_list)}문제 중 {score}문제를 맞히셨습니다!")
+        return score
+
+    except (KeyboardInterrupt, EOFError):
+        print("\n\n[!] 학습 중 중단되었습니다. 메뉴로 돌아갑니다.")
+        return score
+
+# 실행 예시 (테스트용)
+current_score = solve_quiz(initial_quizzes)
