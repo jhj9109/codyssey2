@@ -228,5 +228,3 @@ class QuizGame:
 if __name__ == "__main__":
     game = QuizGame()
     game.run()
-# 실행 예시 (테스트용)
-current_score = solve_quiz(initial_quizzes)
