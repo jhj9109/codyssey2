@@ -202,5 +202,32 @@ def save_to_file(quiz_list, best_score=0):
     except Exception as e:
         print(f"[!] 파일 저장 중 오류가 발생했습니다: {e}")
 
+def show_best_score(best_score):
+    """
+    현재까지의 최고 점수를 출력하는 함수
+    """
+    print("\n--- 🏆 최고 점수 확인 🏆 ---")
+    if best_score > 0:
+        print(f"현재 최고 점수는 {best_score}점 입니다!")
+        print("계속해서 기록을 경신해 보세요!")
+    else:
+        print("아직 기록된 점수가 없습니다. 첫 퀴즈에 도전해 보세요!")
+    print("----------------------------")
+
+def check_and_update_best_score(current_score, best_score, quiz_list):
+    """
+    방금 획득한 점수가 최고 점수인지 확인하고, 
+    최고 점수라면 갱신 후 파일에 저장하는 함수
+    """
+    if current_score > best_score:
+        print(f"\n🎉 축하합니다! 최고 점수를 경신했습니다! (기존: {best_score}점 -> 새로운 최고 점수: {current_score}점) 🎉")
+        new_best_score = current_score
+        
+        # 앞서 만든 save_to_file 함수를 재사용하여 파일 업데이트
+        save_to_file(quiz_list, new_best_score)
+        return new_best_score
+    
+    return best_score
+
 # 실행 예시 (테스트용)
 current_score = solve_quiz(initial_quizzes)
