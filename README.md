@@ -57,6 +57,38 @@ Python 기본 문법과 객체 지향 프로그래밍(OOP) 개념을 적용하�
 }
 ```
 
+## github 저장소 url
+https://github.com/jhj9109/codyssey2.git
+
+## 개발환경
+```bash
+$ $code --version                                                                                                                                         127 ↵ ──(Fri,Apr03)─┘
+1.111.0
+ce099c1ed25d9eb3076c11e4a280f3eb52b4fbeb
+arm64
+
+$ python3 --version                                                                                                                                      127 ↵ ──(Fri,Apr03)─┘
+Python 3.9.6
+```
+```
+credential.helper=osxkeychain
+init.defaultbranch=main
+user.name=jhj9109
+user.email=jhj91_09@naver.com
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+core.ignorecase=true
+core.precomposeunicode=true
+remote.origin.url=https://github.com/jhj9109/codyssey2.git
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.main.remote=origin
+branch.main.vscode-merge-base=origin/main
+branch.main.merge=refs/heads/main
+```
+
+
 ## git log --oneline --graph 캡처
 ![git log --oneline --graph 캡처](docs/screenshoots/git_log_graph.png)
 
