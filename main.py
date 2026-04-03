@@ -50,13 +50,13 @@ class QuizGame:
         """게임 초기화: 데이터 파일을 불러오거나 기본값을 설정합니다."""
         self.file_path = "state.json"
         self.quizzes = []
-        self.best_score = 0
+        self.best_score = -1
         self.load_data()
 
     def set_default_data(self):
         """기본 퀴즈 데이터를 설정하고 최고 점수를 초기화합니다. (파일이 없거나 손상되었을 때 사용)"""
         self.quizzes = initial_quizzes[:]
-        self.best_score = 0
+        self.best_score = -1
 
     def load_data(self):
         """state.json 파일에서 데이터를 불러옵니다. 파일이 없거나 손상되었으면 기본값을 사용합니다."""
@@ -211,7 +211,7 @@ class QuizGame:
         # 제목: 굵은 노란색으로 황금빛 트로피 느낌 강조
         print(f"\n{Color.BOLD}{Color.BLUE}-------- 🏆 최고 점수 확인 🏆 --------{Color.END}")
         
-        if self.best_score > 0:
+        if self.best_score >= 0:
             # 점수 부분만 하늘색(Cyan)으로 강조하여 눈에 띄게 함
             print(f"현재 최고 점수는 {Color.BOLD}{Color.CYAN}{self.best_score}점{Color.END} 입니다!")
             print(f"{Color.CYAN}대단해요! 기록을 더 경신해 보세요! 🔥{Color.END}")
@@ -256,7 +256,7 @@ class QuizGame:
                     print(f"{Color.RED}[!] 1번부터 5번 사이의 숫자를 입력해주세요.{Color.END}")
             
             except (KeyboardInterrupt, EOFError):
-                print(f"\n\n{Color.RED}[!] 비정상 종료가 감지되었습니다. 데이터를 저장하고 안전하게 종료합니다.{Color.END}")
+                print(f"\n\n{Color.RED}[!] 비정상 종료가 감지되었습니다. 안전하게 종료합니다.{Color.END}")
                 break
 
 # 프로그램 실행 진입점

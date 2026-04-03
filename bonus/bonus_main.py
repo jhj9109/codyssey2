@@ -33,23 +33,29 @@ class QuizGame:
     def __init__(self):
         self.file_path = "state.json"
         self.quizzes = []
-        self.best_score = 0
+        self.best_score = -1  # 최고 점수 초기값을 -1로 설정하여 첫 기록이 0점이라도 저장되도록 함
         self.history = []  # [보너스 5] 히스토리 리스트 초기화
         self.load_data()
 
+    def set_default_quizzes(self):
+        self.quizzes = initial_quizzes[:]
+
     def load_data(self):
         if not os.path.exists(self.file_path):
-            self.quizzes = initial_quizzes[:]
+            self.set_default_quizzes()
             return
         try:
             with open(self.file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                self.best_score = data.get("best_score", 0)
-                self.history = data.get("history", []) # 히스토리 불러오기
-                for q_data in data.get("quizzes", []):
-                    self.quizzes.append(Quiz(q_data["question"], q_data["choices"], q_data["answer"], q_data.get("hint", "")))
+                self.best_score = data["best_score"]
+                self.history = data["history"]
+                load_quizzes = []
+                for q_data in data["quizzes"]:
+                    load_quizzes.append(Quiz(q_data["question"], q_data["choices"], q_data["answer"], q_data["hint"]))
+                self.quizzes = load_quizzes
         except Exception:
-            self.quizzes = initial_quizzes[:]
+            # best_score history는 불러오기시점에 초기화 되어있음
+            self.set_default_quizzes()
 
     def save_data(self):
         quiz_data = [{"question": q.question, "choices": q.choices, "answer": q.answer, "hint": q.hint} for q in self.quizzes]
@@ -61,12 +67,13 @@ class QuizGame:
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
                 json.dump(state, f, ensure_ascii=False, indent=4)
+            print("\n=> 데이터가 성공적으로 저장되었습니다. ⭕️")
         except Exception:
-            pass
+            print("[!] 데이터를 저장하는 중 오류가 발생했습니다.")
 
     def play(self):
         if not self.quizzes:
-            print("\n[!] 등록된 퀴즈가 없습니다.")
+            print(f"[!] 현재 퀴즈가 없습니다. 퀴즈를 추가해주세요.")
             return
 
         # [보너스 1] 랜덤 출제
@@ -140,13 +147,12 @@ class QuizGame:
             print(f"\n--- 결과 발표 ---")
             print(f"맞힌 개수: {correct_count} / {len(play_list)}")
             print(f"최종 획득 점수: {score}점")
-            
+
+            # 최고점 갱신
             if score > self.best_score:
                 print(f"🎉 최고 점수 경신! (새로운 최고 점수: {score}점) 🎉")
                 self.best_score = score
-                self.save_data()
-            
-            # (퀴즈 풀기 루프 종료 후)
+                # self.save_data() => 히스토리 등장에 따라 저장 시점 변경
             
             # [보너스 5] 게임 기록 생성 및 추가
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -157,16 +163,10 @@ class QuizGame:
                 "score": score
             }
             self.history.append(record)
-            
-            # 최고 점수 체크 및 전체 데이터 저장
-            if score > self.best_score:
-                self.best_score = score
-            self.save_data()
+            self.save_data() # <= 히스토리 등장에 따라 저장 시점 변경
             
             print(f"\n=> 게임 기록이 저장되었습니다. ({now})")
             
-
-
         except (KeyboardInterrupt, EOFError):
             print("\n[!] 중단되어 기록이 저장되지 않았습니다.")
 
@@ -198,8 +198,9 @@ class QuizGame:
                     print("[!] 숫자로만 입력해주세요.")
 
             self.quizzes.append(Quiz(question, choices, answer))
-            self.save_data() # 추가 시 자동 저장
-            print("\n=> 퀴즈가 성공적으로 추가되었습니다! ✅")
+            print("\n=> 퀴즈가 추가되었습니다! ✅")
+            self.save_data()
+            return
 
         except (KeyboardInterrupt, EOFError):
             print("\n\n[!] 추가가 중단되었습니다.")
@@ -210,49 +211,49 @@ class QuizGame:
         if not self.quizzes:
             print("[!] 삭제할 퀴즈가 없습니다.")
             return
-
-        # 현재 목록을 먼저 보여줌
-        self.show_list()
         
         try:
+            copied_quizzes = self.quizzes[:]
             while True:
-                choice_input = input("삭제할 퀴즈의 번호를 입력하세요 (취소: 0): ").strip()
+                self.show_list(copied_quizzes)
+                choice_input = input("삭제할 퀴즈의 번호를 입력하세요 (완료: 0): ").strip()
                 if choice_input == '0':
-                    print("삭제가 취소되었습니다.")
+                    self.quizzes = copied_quizzes[:] # 변경된 목록으로 업데이트
+                    print("삭제가 완료되었습니다.")
+                    self.save_data() # 삭제 완료시 즉시 파일 저장
                     return
                 
                 try:
                     index = int(choice_input)
-                    if 1 <= index <= len(self.quizzes):
+                    if 1 <= index <= len(copied_quizzes):
                         # 삭제 확인 절차
-                        removed_quiz = self.quizzes.pop(index - 1)
-                        self.save_data() # 삭제 후 즉시 파일 저장
-                        print(f"\n=> [질문: {removed_quiz.question[:20]}...] 항목이 성공적으로 삭제되었습니다. 🗑️")
-                        break
+                        removed_quiz = copied_quizzes.pop(index - 1)
+                        # self.save_data() # 삭제 후 즉시 파일 저장 => 삭제 완료시 저장으로 이동
+                        print(f"\n=> [질문: {removed_quiz.question[:20]}...] 항목을 삭제합니다. 🗑️")
                     else:
-                        print(f"[!] 1에서 {len(self.quizzes)} 사이의 번호를 입력해주세요.")
+                        print(f"[!] 1에서 {len(copied_quizzes)} 사이의 번호를 입력해주세요.")
                 except ValueError:
                     print("[!] 숫자로만 입력해주세요.")
-        
+            
         except (KeyboardInterrupt, EOFError):
             print("\n\n[!] 삭제 과정이 중단되었습니다.")
 
-    def show_list(self):
+    def show_list(self, quizzes=None):
         """퀴즈 목록 출력"""
         print("\n--- 등록된 퀴즈 목록 ---")
-        if not self.quizzes:
+        if not quizzes and not self.quizzes:
             print("현재 등록된 퀴즈가 없습니다.")
             return
-        for i, quiz in enumerate(self.quizzes, 1):
+        showed_quizzes = self.quizzes if quizzes == None else quizzes
+        for i, quiz in enumerate(showed_quizzes, 1):
             q_summary = quiz.question[:30] + "..." if len(quiz.question) > 30 else quiz.question
-           # [Hotfix] 정답 노출 제거
-            print(f"{i}. {q_summary}")
+            print(f"{i}. {q_summary}") # [Hotfix] 정답 노출 제거
         print("------------------------")
 
     def show_score(self):
         """최고 점수 출력"""
         print("\n--- 🏆 최고 점수 확인 🏆 ---")
-        if self.best_score > 0:
+        if self.best_score >= 0:
             print(f"현재 최고 점수는 {self.best_score}점 입니다!")
         else:
             print("아직 기록된 점수가 없습니다. 첫 퀴즈에 도전해 보세요!")
@@ -287,14 +288,19 @@ class QuizGame:
             print("7. 종료")
             print("="*30)
             
-            choice = input("입력: ").strip()
-            if choice == '1': self.play()
-            elif choice == '2': self.add_quiz()
-            elif choice == '3': self.show_list()
-            elif choice == '4': self.show_score()
-            elif choice == '5': self.delete_quiz()
-            elif choice == '6': self.show_history() # 히스토리 메서드 연결
-            elif choice == '7': break
+            try:
+                choice = input("입력: ").strip()
+                if choice == '1': self.play()
+                elif choice == '2': self.add_quiz()
+                elif choice == '3': self.show_list()
+                elif choice == '4': self.show_score()
+                elif choice == '5': self.delete_quiz()
+                elif choice == '6': self.show_history() # 히스토리 메서드 연결
+                elif choice == '7': print("프로그램을 종료합니다. 감사합니다! 👋"); break
+                else: print("[!] 1~7 사이의 숫자를 입력해주세요.")
+            except (KeyboardInterrupt, EOFError):
+                print("\n[!] 프로그램이 종료되었습니다.")
+                break
 
 # 프로그램 실행 진입점
 if __name__ == "__main__":
