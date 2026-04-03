@@ -53,37 +53,48 @@ class QuizGame:
         self.best_score = 0
         self.load_data()
 
+    def set_default_data(self):
+        """기본 퀴즈 데이터를 설정하고 최고 점수를 초기화합니다. (파일이 없거나 손상되었을 때 사용)"""
+        self.quizzes = initial_quizzes[:]
+        self.best_score = 0
+
     def load_data(self):
         """state.json 파일에서 데이터를 불러옵니다. 파일이 없거나 손상되었으면 기본값을 사용합니다."""
         if not os.path.exists(self.file_path):
             print(f"{Color.YELLOW}[안내] 저장된 데이터 파일이 없어 기본 퀴즈 데이터를 불러옵니다.{Color.END}")
-            self.quizzes = initial_quizzes[:] # 앞서 만든 기본 데이터 복사
+            self.set_default_data()
             return
 
         try:
             with open(self.file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                self.best_score = data.get("best_score", 0)
-                
-                # JSON 데이터의 딕셔너리를 다시 Quiz 객체로 변환
-                for q_data in data.get("quizzes", []):
-                    quiz = Quiz(q_data["question"], q_data["choices"], q_data["answer"])
-                    self.quizzes.append(quiz)
+                self.best_score = data["best_score"]
+                self.quizzes = [
+                Quiz(q_data["question"], q_data["choices"], q_data["answer"]) 
+                    for q_data in data["quizzes"]
+                ]
                     
             print(f"{Color.CYAN}[성공] 저장된 퀴즈 데이터를 성공적으로 불러왔습니다.{Color.END}")
             
         except json.JSONDecodeError:
             print(f"{Color.RED}[오류] 데이터 파일이 손상되었습니다. 기본 퀴즈 데이터로 시작합니다.{Color.END}")
-            self.quizzes = initial_quizzes[:]
+            self.set_default_data()
+        except KeyError as e:
+            print(f"{Color.RED}[오류] 데이터 파일에 필수 항목({e})이 누락되었습니다. 기본 데이터로 시작합니다.{Color.END}")
+            self.set_default_data()
+        except ValueError as ve:
+            print(f"{Color.RED}[오류] 데이터 구조 문제: {ve} 기본 데이터로 시작합니다.{Color.END}")
+            self.set_default_data()
         except Exception as e:
             print(f"{Color.RED}[오류] 파일을 불러오는 중 문제가 발생했습니다: {e}{Color.END}")
-            self.quizzes = initial_quizzes[:]
+            self.set_default_data()
 
     def save_data(self):
         """현재 퀴즈 목록과 최고 점수를 파일에 저장합니다."""
         quiz_data = [{"question": q.question, "choices": q.choices, "answer": q.answer} for q in self.quizzes]
-        state = {"quizzes": quiz_data, "best_score": self.best_score}
+        best_score = self.best_score
+        state = {"quizzes": quiz_data, "best_score": best_score}
         
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
@@ -173,11 +184,12 @@ class QuizGame:
                     print(f"{Color.RED}[!] 숫자로만 입력해주세요.{Color.END}")
 
             self.quizzes.append(Quiz(question, choices, answer))
-            self.save_data() # 추가 시 자동 저장
             
             # 성공 메시지: 확실한 초록색(GREEN)으로 완료 표시
             print(f"\n{Color.BOLD}{Color.GREEN}✅ 퀴즈가 성공적으로 추가되었습니다!{Color.END}")
             print(f"{Color.BLUE}----------------------------{Color.END}")
+            
+            self.save_data() # 추가 시 자동 저장
 
         except (KeyboardInterrupt, EOFError):
             print("\n\n[!] 추가가 중단되었습니다.")
@@ -239,14 +251,12 @@ class QuizGame:
                     self.show_score()
                 elif choice == '5':
                     print(f"\n{Color.GREEN}게임을 종료합니다. 이용해 주셔서 감사합니다! 👋{Color.END}")
-                    self.save_data() # 종료 전 안전하게 한 번 더 저장
                     break
                 else:
                     print(f"{Color.RED}[!] 1번부터 5번 사이의 숫자를 입력해주세요.{Color.END}")
             
             except (KeyboardInterrupt, EOFError):
                 print(f"\n\n{Color.RED}[!] 비정상 종료가 감지되었습니다. 데이터를 저장하고 안전하게 종료합니다.{Color.END}")
-                self.save_data()
                 break
 
 # 프로그램 실행 진입점
