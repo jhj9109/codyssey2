@@ -5,7 +5,7 @@ import random  # 보너스 1: random 모듈 추가
 from datetime import datetime  # [보너스 5] 날짜 기록을 위한 모듈
 
 class Quiz:
-    def __init__(self, question, choices, answer, hint=""):
+    def __init__(self, question, choices, answer, hint):
         self.question = question
         self.choices = choices
         self.answer = answer
@@ -15,8 +15,7 @@ class Quiz:
         print(f"\n[문제 {index}] {self.question}")
         for i, choice in enumerate(self.choices, 1):
             print(f"  {i}. {choice}")
-        if self.hint:
-            print("  (힌트를 보려면 'h' 또는 'hint'를 입력하세요.)")
+        print("  (힌트를 보려면 'h' 또는 'hint'를 입력하세요.)")
 
     def is_correct(self, user_input):
         return str(self.answer) == str(user_input).strip()
@@ -121,11 +120,8 @@ class QuizGame:
                     
                     # 힌트 요청 처리
                     if user_input in ['h', 'hint']:
-                        if quiz.hint:
-                            print(f"\n💡 힌트: {quiz.hint}")
-                            used_hint = True
-                        else:
-                            print("\n[!] 이 문제에는 힌트가 없습니다.")
+                        print(f"\n💡 힌트: {quiz.hint}")
+                        used_hint = True
                         continue
 
                     try:
@@ -197,7 +193,12 @@ class QuizGame:
                 except ValueError:
                     print("[!] 숫자로만 입력해주세요.")
 
-            self.quizzes.append(Quiz(question, choices, answer))
+            while True:
+                hint = input("힌트를 입력하세요: ").strip()
+                if hint: break
+                print("[!] 힌트는 비어있을 수 없습니다.")
+
+            self.quizzes.append(Quiz(question, choices, answer, hint))
             print("\n=> 퀴즈가 추가되었습니다! ✅")
             self.save_data()
             return
