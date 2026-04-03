@@ -134,3 +134,6 @@ JSON의 한계점: JSON 파일은 데이터를 읽고 쓸 때마다 파일 전�
 1. 새로운 로컬 디렉토리(`clone_test`)에 저장소를 `git clone https://github.com/jhj9109/codyssey2.git` 명령어로 복제 완료했습니다.
 2. 복제된 폴더에서 README.md 파일에 임의의 텍스트를 추가한 후 `commit` 및 `push`를 수행했습니다.
 3. 원래 작업하던 원본 디렉토리로 돌아와 `git pull` 명령어로 원격 저장소의 변경된 내역을 로컬로 성공적으로 병합(Merge) 완료했습니다.<클론 테스트의 흔적>
+
+![](docs/screenshoots/clone.png)
+![](docs/screenshoots/merge.png)
